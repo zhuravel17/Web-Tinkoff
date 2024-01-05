@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <script src="script.js" defer></script>
+    <title></title>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <header class="header">
+      <p class="heading">Витрина данных</p>
+      <button class="pink-button" id="setup-button">Загрузить исходники</button>
+    </header>
+    <main>
+      <section class="add-card-form">
+        <p class="heading" id="add-heading">Форма для добавления карточки</p>
+        <form name="form-new-card">
+          <input
+            class="form-input-elem"
+            type="text"
+            name="name"
+            placeholder="Name"
+          />
+          <input
+            class="form-input-elem"
+            type="text"
+            name="url"
+            placeholder="Ссылка на изображение"
+          />
+          <input
+            class="form-input-elem"
+            type="text"
+            name="id"
+            placeholder="id"
+          />
+          <textarea
+            class="form-input-elem"
+            type="text"
+            name="description"
+            placeholder="Описание"
+            rows="4"
+            cols="15"
+          ></textarea>
+          <input
+            class="form-input-elem"
+            type="text"
+            name="provider"
+            placeholder="Прочая хуйня"
+          />
+          <button class="pink-button" id="add-cart-button">
+            Добавить карточку
+          </button>
+        </form>
+      </section>
+      <section class="cards">
+        <p class="heading">Витрина карточек</p>
+        <div class="list-cards">
+          <!--
+          <div class="card">
+            <div class="card-buttons">
+              <button class="card-button">Редачить</button>
+              <button class="card-button">Удалить</button>
+            </div>
+            <div class="card-text">
+              <div class="card-info">
+                <img
+                  class="card-photo"
+                  src="https://cdn.culture.ru/images/a6bc3c04-0167-5030-b94c-e47d9a1fea11"
+                />
+                <div class="card-text-info">
+                  <p class="card-name">Я кот</p>
+                  <p class="card-info-id-prov">ID 123</p>
+                  <p class="card-info-id-prov">
+                    Поставщик: не твое дело
+                  </p>
+                </div>
+              </div>
+
+              <div class="card-description">
+                Какой же я балдежный кот
+              </div>
+            </div>
+          </div>
+          -->
+        </div>
+      </section>
+      <div></div>
+    </main>
+  </body>
+</html>
