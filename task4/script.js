@@ -9,40 +9,44 @@ class Card {
 }
 
 function setupCards() {
-  let cat = new Card(
+  const cat = new Card(
     "Кошка",
     "https://cdn.culture.ru/images/a6bc3c04-0167-5030-b94c-e47d9a1fea11",
     "Балдежный кот",
     "1",
     "Противный кот"
   );
-  let newYear = new Card(
+  const newYear = new Card(
     "Новогоднее настроение",
     "https://proprikol.ru/wp-content/uploads/2019/11/krasivye-novogodnie-fotografii-63.jpg",
     "Мммм новый год и хорошо украшенная елочка",
     "2",
     "New Year"
   );
-  let friends = new Card(
+  const friends = new Card(
     "Друзяшки",
     "https://formaxfun.com/wp-content/uploads/2023/12/pozdravleniya-s-novym-godom-2024-i-rozhdestvom_6574edf634b26.jpeg",
     "Новый год с друзьями! Что может быть лучше?",
     "3",
     "New Year Friends"
   );
-  let getto = new Card(
+  const getto = new Card(
     "Жизнь в гетто",
     "https://phonoteka.org/uploads/posts/2022-04/1651167126_43-phonoteka-org-p-getto-oboi-krasivo-48.jpg",
     "МММММММММ",
     "4",
     "Гетто"
   );
-  let array = [cat, newYear, friends, getto];
-  let jsonString = JSON.stringify(array);
+
+  const cards = [cat, newYear, friends, getto];
+
+  const jsonString = JSON.stringify(cards);
+
   try {
     window.localStorage.clear();
     window.localStorage.setItem("cards", jsonString);
     renderCards();
+
     location.reload();
   } catch {
     alert("problems with start data");
@@ -50,7 +54,8 @@ function setupCards() {
 }
 
 function renderCards() {
-  let cards = JSON.parse(window.localStorage.getItem("cards"));
+  const cards = JSON.parse(window.localStorage.getItem("cards"));
+
   if (cards === null) return;
   for (let i = 0; i < cards.length; ++i) {
     let card = cards[i];
@@ -129,21 +134,34 @@ function renderCards() {
 }
 
 function addCart(event) {
-  let formData = document.getElementsByName("form-new-card")[0];
-  let card = saveFormData(formData, new Card());
-  if (!card) return;
-  let cards = JSON.parse(window.localStorage.getItem("cards"));
-  cards.push(card);
-  updateLocalStorage(cards);
+  const isEditCard =
+    document.getElementById("heading").textContent === "Редачить карточку";
+
+  event.preventDefault();
+  const formData = document.getElementsByName("form-new-card")[0];
+  const newCard = saveFormData(formData, new Card());
+  if (!newCard) return;
+
+  const localStorageCards = JSON.parse(window.localStorage.getItem("cards"));
+  if (isEditCard) {
+    const currentIndex = localStorageCards.findIndex(
+      (card) => card.id == newCard.id
+    );
+    localStorageCards.splice(currentIndex, 1, newCard);
+
+    updateLocalStorage(localStorageCards);
+  } else {
+    localStorageCards.push(newCard);
+    updateLocalStorage(localStorageCards);
+  }
+
+  location.reload();
 }
 
 function saveFormData(form, data) {
   const formData = Array.from(new FormData(form).entries());
-  console.log("data", data);
-  let card = data;
-  console.log("card_data", card);
-  console.log("length", formData.length);
-
+  const card = data;
+  const isEditCard = document.getElementById("heading") === "Редачить карточку";
   for (let i = 0; i < formData.length; ++i) {
     let [key, value] = formData[i];
     console.log(key, value);
@@ -151,64 +169,68 @@ function saveFormData(form, data) {
     if (key == "name") {
       if (card.name == "" || value != "") card.name = value;
     }
-    if (key == "url") {
+
+    if (key == "urlImg") {
       if (card.url == "" || value != "") card.url = value;
     }
-    if (key == "id") {
-      if (card.id == "" || value != "") card.id = value;
-    }
+
     if (key == "description") {
       if (card.description == "" || value != "") card.description = value;
     }
+
     if (key == "provider") {
       if (card.provider == "" || value != "") card.provider = value;
+    }
+
+    if (isEditCard) {
+      card.id = Math.floor(Math.random() * new Date().getTime());
+    } else {
+      if (key === "id") card.id = value;
     }
   }
   let cards = JSON.parse(window.localStorage.getItem("cards"));
   for (let elem of cards) {
-    if (!card.id) card.id = Math.floor(Math.random() * new Date().getTime());
     if (!card.name || !card.description || !card.provider || !card.url) {
       alert("Нужно заполнить обязательные поля");
-      return 0;
+      return false;
     }
     if (card.id < 0) {
       alert("Исправьте ID на положительное число");
-      return 0;
-    }
-    if (JSON.stringify(card) === JSON.stringify(elem)) {
-      alert("Такая карточка уже существует");
-      return 0;
-    }
-    if (card.id == elem.id) {
-      alert("Id должен быть уникальным!");
-      return 0;
+      return false;
     }
   }
   return card;
 }
 
 function editCard(event) {
-  let formData = document.getElementsByName("form-new-card")[0];
-  let cards = JSON.parse(window.localStorage.getItem("cards"));
-  let changeCard = cards.find((card) => card.id == event.target.choose);
-  let cardId = cards.findIndex((card) => card.id == event.target.choose);
-  let card = new Card(
-    changeCard.name,
-    changeCard.url,
-    changeCard.description,
-    changeCard.id,
-    changeCard.provider
-  );
-  let changedCard = saveFormData(formData, card);
-  cards[cardId] = changedCard;
-  updateLocalStorage(cards);
-  location.reload();
+  const label = document.getElementById("heading");
+  const buttonEdit = document.getElementById("cart-button");
+
+  label.textContent = "Редачить карточку";
+  buttonEdit.textContent = "Сохранить изменения";
+
+  const formData = document.getElementsByName("form-new-card")[0];
+  const cards = JSON.parse(window.localStorage.getItem("cards"));
+  const currentCard = cards.find((card) => card.id == event.target.choose);
+  const cardIndex = cards.findIndex((card) => card.id == event.target.choose);
+
+  const nameInput = document.querySelector('[name="name"]');
+  const imgInput = document.querySelector('[name="urlImg"]');
+  const descriptionInput = document.querySelector('[name="description"]');
+  const providerInput = document.querySelector('[name="provider"]');
+  const idInput = document.querySelector('[name="id"]');
+
+  nameInput.value = currentCard?.name ?? "";
+  imgInput.value = currentCard?.url ?? "";
+  descriptionInput.value = currentCard?.description ?? "";
+  providerInput.value = currentCard?.provider ?? "";
+  idInput.value = currentCard?.id ?? "";
 }
 
 function deleteCard(event) {
-  let cards = JSON.parse(window.localStorage.getItem("cards"));
-  cards.splice(event.target.pos, 1);
-  updateLocalStorage(cards);
+  const cards = JSON.parse(window.localStorage.getItem("cards"));
+  const newCards = cards.filter((card) => card.id !== event.target.choose);
+  updateLocalStorage(newCards);
   location.reload();
 }
 
@@ -220,7 +242,7 @@ function updateLocalStorage(cards) {
 const setupButton = document.getElementById("setup-button");
 setupButton.addEventListener("click", setupCards);
 
-const addButton = document.getElementById("add-cart-button");
+const addButton = document.getElementById("cart-button");
 addButton.addEventListener("click", addCart);
 
 window.onload = renderCards;

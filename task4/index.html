@@ -13,7 +13,7 @@
     </header>
     <main>
       <section class="add-card-form">
-        <p class="heading" id="add-heading">Форма для добавления карточки</p>
+        <p class="heading" id="heading">Добавить карточку</p>
         <form name="form-new-card">
           <input
             class="form-input-elem"
@@ -24,7 +24,7 @@
           <input
             class="form-input-elem"
             type="text"
-            name="url"
+            name="urlImg"
             placeholder="Ссылка на изображение"
           />
           <input
@@ -32,6 +32,7 @@
             type="text"
             name="id"
             placeholder="id"
+            hidden
           />
           <textarea
             class="form-input-elem"
@@ -47,7 +48,7 @@
             name="provider"
             placeholder="Прочая хуйня"
           />
-          <button class="pink-button" id="add-cart-button">
+          <button class="pink-button" id="cart-button">
             Добавить карточку
           </button>
         </form>
