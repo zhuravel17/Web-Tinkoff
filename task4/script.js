@@ -58,7 +58,7 @@ function renderCards() {
 
   if (cards === null) return;
   for (let i = 0; i < cards.length; ++i) {
-    let card = cards[i];
+    const card = cards[i];
 
     const divCard = document.createElement("div");
     divCard.id = `card${i}`;
@@ -209,10 +209,8 @@ function editCard(event) {
   label.textContent = "Редачить карточку";
   buttonEdit.textContent = "Сохранить изменения";
 
-  const formData = document.getElementsByName("form-new-card")[0];
   const cards = JSON.parse(window.localStorage.getItem("cards"));
   const currentCard = cards.find((card) => card.id == event.target.choose);
-  const cardIndex = cards.findIndex((card) => card.id == event.target.choose);
 
   const nameInput = document.querySelector('[name="name"]');
   const imgInput = document.querySelector('[name="urlImg"]');
@@ -245,4 +243,4 @@ setupButton.addEventListener("click", setupCards);
 const addButton = document.getElementById("cart-button");
 addButton.addEventListener("click", addCart);
 
-window.onload = renderCards;
+renderCards();
