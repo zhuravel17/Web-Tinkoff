@@ -1,3 +1,5 @@
+const URL_SERVER = "http://localhost:4000/";
+
 class Card {
   constructor(name, url, description, id, provider) {
     this.name = name;
@@ -8,7 +10,24 @@ class Card {
   }
 }
 
-function setupCards() {
+async function fetchAll() {
+  await fetchUser();
+  await fetchCards();
+}
+
+async function fetchUser() {
+  try {
+    const response = await fetch(`${URL_SERVER}user`);
+    const user = await response.json();
+    document.getElementById(
+      "heading-name"
+    ).textContent = `${user.nickname} ${user.group}`;
+  } catch (err) {
+    alert("Ошибка в запросе имени автора: " + err);
+  }
+}
+
+async function setupCards() {
   const cat = new Card(
     "Кошка",
     "https://cdn.culture.ru/images/a6bc3c04-0167-5030-b94c-e47d9a1fea11",
@@ -38,24 +57,48 @@ function setupCards() {
     "Гетто"
   );
 
-  const cards = [cat, newYear, friends, getto];
-
-  const jsonString = JSON.stringify(cards);
+  const mockCards = [cat, newYear, friends, getto];
 
   try {
-    window.localStorage.clear();
-    window.localStorage.setItem("cards", jsonString);
-    renderCards();
+    const response = await fetch(`${URL_SERVER}cards`, { method: "GET" });
+    const cards = await response.json();
 
-    location.reload();
+    const deletedCards = cards.map(async (card) => {
+      return await fetch(`${URL_SERVER}cards/${card.id}`, {
+        method: "DELETE",
+      });
+    });
+
+    const setCards = mockCards.map(async (card) => {
+      return await fetch(URL_SERVER + `cards`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json;charset=utf-8",
+        },
+        body: JSON.stringify(card),
+      });
+    });
+
+    await Promise.all([deletedCards, setCards]);
+  } catch {
+    alert("problems with start data");
+  } finally {
+    renderCards(mockCards);
+  }
+}
+
+async function fetchCards() {
+  try {
+    const response = await fetch(URL_SERVER + "cards");
+    const cards = await response.json();
+
+    renderCards(cards);
   } catch {
     alert("problems with start data");
   }
 }
 
-function renderCards() {
-  const cards = JSON.parse(window.localStorage.getItem("cards"));
-
+function renderCards(cards) {
   if (cards === null) return;
   for (let i = 0; i < cards.length; ++i) {
     const card = cards[i];
@@ -133,38 +176,49 @@ function renderCards() {
   }
 }
 
-function addCart(event) {
+async function addCart(event) {
+  event.preventDefault();
+
   const isEditCard =
     document.getElementById("heading").textContent === "Редачить карточку";
-
-  event.preventDefault();
   const formData = document.getElementsByName("form-new-card")[0];
   const newCard = saveFormData(formData, new Card());
   if (!newCard) return;
 
-  const localStorageCards = JSON.parse(window.localStorage.getItem("cards"));
   if (isEditCard) {
-    const currentIndex = localStorageCards.findIndex(
-      (card) => card.id == newCard.id
-    );
-    localStorageCards.splice(currentIndex, 1, newCard);
-
-    updateLocalStorage(localStorageCards);
+    try {
+      await fetch(URL_SERVER + `cards/${newCard.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newCard),
+      });
+    } catch {
+      alert("problems with making new card");
+    }
   } else {
-    localStorageCards.push(newCard);
-    updateLocalStorage(localStorageCards);
+    try {
+      await fetch(URL_SERVER + `cards`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json;charset=utf-8",
+        },
+        body: JSON.stringify(newCard),
+      });
+    } catch {
+      alert("problems with making new card");
+    }
   }
-
-  location.reload();
 }
 
 function saveFormData(form, data) {
   const formData = Array.from(new FormData(form).entries());
   const card = data;
-  const isEditCard = document.getElementById("heading") === "Редачить карточку";
+  const isEditCard =
+    document.getElementById("heading").textContent === "Редачить карточку";
   for (let i = 0; i < formData.length; ++i) {
     let [key, value] = formData[i];
-    console.log(key, value);
 
     if (key == "name") {
       if (card.name == "" || value != "") card.name = value;
@@ -182,35 +236,34 @@ function saveFormData(form, data) {
       if (card.provider == "" || value != "") card.provider = value;
     }
 
-    if (isEditCard) {
+    if (!isEditCard) {
       card.id = Math.floor(Math.random() * new Date().getTime());
     } else {
       if (key === "id") card.id = value;
     }
   }
-  let cards = JSON.parse(window.localStorage.getItem("cards"));
-  for (let elem of cards) {
-    if (!card.name || !card.description || !card.provider || !card.url) {
-      alert("Нужно заполнить обязательные поля");
-      return false;
-    }
-    if (card.id < 0) {
-      alert("Исправьте ID на положительное число");
-      return false;
-    }
+  if (!card.name || !card.description || !card.provider || !card.url) {
+    alert("Нужно заполнить обязательные поля");
+    return false;
+  }
+  if (card.id < 0) {
+    alert("Исправьте ID на положительное число");
+    return false;
   }
   return card;
 }
 
-function editCard(event) {
+async function editCard(event) {
   const label = document.getElementById("heading");
   const buttonEdit = document.getElementById("cart-button");
 
   label.textContent = "Редачить карточку";
   buttonEdit.textContent = "Сохранить изменения";
 
-  const cards = JSON.parse(window.localStorage.getItem("cards"));
-  const currentCard = cards.find((card) => card.id == event.target.choose);
+  const response = await fetch(URL_SERVER + `cards/${event.target.choose}`, {
+    method: "GET",
+  });
+  const currentCard = await response.json();
 
   const nameInput = document.querySelector('[name="name"]');
   const imgInput = document.querySelector('[name="urlImg"]');
@@ -225,16 +278,14 @@ function editCard(event) {
   idInput.value = currentCard?.id ?? "";
 }
 
-function deleteCard(event) {
-  const cards = JSON.parse(window.localStorage.getItem("cards"));
-  const newCards = cards.filter((card) => card.id !== event.target.choose);
-  updateLocalStorage(newCards);
-  location.reload();
-}
-
-function updateLocalStorage(cards) {
-  window.localStorage.clear();
-  window.localStorage.setItem("cards", JSON.stringify(cards));
+async function deleteCard(event) {
+  try {
+    await fetch(URL_SERVER + `cards/${event.target.choose}`, {
+      method: "DELETE",
+    });
+  } catch {
+    alert("problems with deleting card");
+  }
 }
 
 const setupButton = document.getElementById("setup-button");
@@ -243,4 +294,4 @@ setupButton.addEventListener("click", setupCards);
 const addButton = document.getElementById("cart-button");
 addButton.addEventListener("click", addCart);
 
-renderCards();
+fetchAll();
